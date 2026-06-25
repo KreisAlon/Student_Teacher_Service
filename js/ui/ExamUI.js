@@ -55,6 +55,10 @@ export class ExamUI {
           Run Exam
         </button>
 
+        <a href="edit-exam.html?id=${exam.id}" class="btn btn-sm btn-warning mx-1">
+          Edit
+        </a>
+        
         <button
           class="btn btn-sm btn-danger delete-btn"
           data-id="${exam.id}">

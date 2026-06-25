@@ -3,7 +3,9 @@ body {
 }
 
 .card {
-    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.05);
 }
 
 .question-box {
@@ -26,9 +28,19 @@ body {
     padding: 15px;
     margin-bottom: 12px;
     background-color: #fff;
+    transition: transform 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+}
+
+.exam-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
 }
 
 .small-muted {
     font-size: 0.9rem;
     color: #666;
+}
+
+.btn {
+    border-radius: 8px;
 }
