@@ -21,17 +21,14 @@ export class AccountManager {
         return parsedData.map(userData => User.fromJSON(userData));
     }
 
-    // Updated to include userId (Teudat Zehut) and password
     registerUser(userId, username, role, password) {
         const usersList = this.getAllUsers();
 
-        // Check if ID or Username already exists
-        const isUserExists = usersList.some(user =>
-            user.id === userId || user.name.toLowerCase() === username.toLowerCase()
-        );
+        // Check ONLY if ID already exists (usernames can be duplicated)
+        const isUserExists = usersList.some(user => user.id === userId);
 
         if (isUserExists) {
-            return null; // Registration failed - user exists
+            return null; // Registration failed - ID exists
         }
 
         // Create new user and push to list

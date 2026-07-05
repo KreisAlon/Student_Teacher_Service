@@ -22,9 +22,8 @@ registerForm.addEventListener("submit", (event) => {
     const newUser = accountManager.registerUser(id, username, role, password);
 
     if (!newUser) {
-        // If the return value is null, the ID or username is already taken
-        messageBox.innerHTML = `<div class="alert alert-danger mt-3">שם המשתמש או תעודת הזהות כבר קיימים במערכת</div>`;
-        return;
+        // If the return value is null, the ID already taken
+        messageBox.innerHTML = `<div class="alert alert-danger mt-3">תעודת הזהות כבר קיימת במערכת. אנא התחבר.</div>`; return;
     }
 
     // Display success message and provide a link to the login page
