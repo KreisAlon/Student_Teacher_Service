@@ -4,30 +4,29 @@ const accountManager = new AccountManager();
 
 const loginForm = document.getElementById("loginForm");
 const usernameInput = document.getElementById("usernameInput");
+const passwordInput = document.getElementById("passwordInput");
 const messageBox = document.getElementById("messageBox");
 
 loginForm.addEventListener("submit", (event) => {
-    // Stop the page from refreshing when we click submit
+    // Prevent the default form submission (page reload)
     event.preventDefault();
 
-    const username = usernameInput.value.trim();
+    const usernameOrId = usernameInput.value.trim();
+    const password = passwordInput.value.trim();
 
-    // Try to login. If user does not exist, it returns null
-    const user = accountManager.loginUser(username);
+    // Attempt to authenticate the user using the updated AccountManager method
+    const user = accountManager.loginUser(usernameOrId, password);
 
     if (!user) {
-        // Show an error message on the screen
-        messageBox.innerHTML = `<div class="alert alert-danger mt-3">המשתמש לא קיים במערכת</div>`;
-        return; // Stop the function here
+        // Display an error if credentials do not match any record
+        messageBox.innerHTML = `<div class="alert alert-danger mt-3">פרטי ההתחברות שגויים, אנא נסה שוב</div>`;
+        return;
     }
 
-    // Check the role to know which page to link to
-    let linkUrl = "";
+    // Redirect the authenticated user to their respective dashboard based on role
     if (user.role === "teacher") {
         window.location.href = "teacher.html";
     } else {
         window.location.href = "student.html";
     }
-
-    return; // Stop the function here
 });

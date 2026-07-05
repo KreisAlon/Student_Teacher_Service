@@ -17,8 +17,14 @@
             <div class="card-body">
                 <form id="loginForm">
                     <div class="mb-3">
-                        <label class="form-label">שם משתמש</label>
-                        <input type="text" id="usernameInput" class="form-control" required placeholder="הכנס שם משתמש">
+                        <label class="form-label">שם משתמש או תעודת זהות</label>
+                        <input type="text" id="usernameInput" class="form-control" required
+                            placeholder="הכנס שם משתמש או ת.ז">
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">סיסמה</label>
+                        <input type="password" id="passwordInput" class="form-control" required
+                            placeholder="הכנס סיסמה">
                     </div>
                     <button type="submit" class="btn btn-success w-100 mb-3">התחבר</button>
                     <div id="messageBox"></div>
