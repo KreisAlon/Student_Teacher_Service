@@ -2,79 +2,79 @@ import { User } from "../models/User.js";
 
 export class AccountManager {
     constructor() {
-        // Keys for localStorage
+        // All users data stays in localStorage permanently
         this.storageKey = "app_users_data";
+        // Active user session goes to sessionStorage (cleared when tab closes)
         this.sessionKey = "active_user_session";
     }
 
     getAllUsers() {
         const storedData = localStorage.getItem(this.storageKey);
 
-        // If there is no data, return an empty array
         if (!storedData) {
             return [];
         }
 
         const parsedData = JSON.parse(storedData);
 
-        // Return real User objects so we don't lose the class structure
-        return parsedData.map(data => {
-            const user = new User(data.id, data.name, data.role);
-            user.createdAt = data.createdAt;
-            return user;
-        });
+        // Utilize the static method from the User class to reconstruct objects
+        return parsedData.map(userData => User.fromJSON(userData));
     }
 
-    registerUser(username, role) {
+    // Updated to include userId (Teudat Zehut) and password
+    registerUser(userId, username, role, password) {
         const usersList = this.getAllUsers();
 
-        // Check if the username already exists (ignore upper/lower case)
-        const isUserExists = usersList.some(user => user.name.toLowerCase() === username.toLowerCase());
+        // Check if ID or Username already exists
+        const isUserExists = usersList.some(user =>
+            user.id === userId || user.name.toLowerCase() === username.toLowerCase()
+        );
 
         if (isUserExists) {
-            // Return null instead of throwing an error
-            return null;
+            return null; // Registration failed - user exists
         }
 
-        // Create new user and add to the list
-        const newUser = new User(null, username, role);
+        // Create new user and push to list
+        const newUser = new User(userId, username, role, password);
         usersList.push(newUser);
 
-        // Save back to localStorage
         localStorage.setItem(this.storageKey, JSON.stringify(usersList));
         return newUser;
     }
 
-    loginUser(username) {
+    // Updated to check for password verification
+    loginUser(usernameOrId, password) {
         const usersList = this.getAllUsers();
 
-        // Find the user by name
-        const foundUser = usersList.find(user => user.name.toLowerCase() === username.toLowerCase());
+        // Find user by either Name or ID, AND verify the password matches
+        const foundUser = usersList.find(user =>
+            (user.name.toLowerCase() === usernameOrId.toLowerCase() || user.id === usernameOrId)
+            && user.password === password
+        );
 
         if (!foundUser) {
-            // User not found
-            return null;
+            return null; // Login failed
         }
 
-        // Save the logged-in user to the session
-        localStorage.setItem(this.sessionKey, JSON.stringify(foundUser));
+        // Save the active session in sessionStorage instead of localStorage
+        sessionStorage.setItem(this.sessionKey, JSON.stringify(foundUser));
         return foundUser;
     }
 
     logoutUser() {
-        localStorage.removeItem(this.sessionKey);
+        // Clear only the active session
+        sessionStorage.removeItem(this.sessionKey);
     }
 
     getActiveSession() {
-        const sessionData = localStorage.getItem(this.sessionKey);
+        // Retrieve from sessionStorage
+        const sessionData = sessionStorage.getItem(this.sessionKey);
 
         if (!sessionData) {
             return null;
         }
 
-        const data = JSON.parse(sessionData);
-        const user = new User(data.id, data.name, data.role);
-        user.createdAt = data.createdAt;
-        return user;
+        // Reconstruct the User object
+        return User.fromJSON(JSON.parse(sessionData));
     }
 }
