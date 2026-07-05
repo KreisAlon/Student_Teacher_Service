@@ -74,11 +74,8 @@ function attachStartExamListeners() {
         btn.addEventListener("click", (event) => {
             const examId = event.target.getAttribute("data-id");
 
-            // Save the selected exam ID in sessionStorage to load it in the execution page
-            sessionStorage.setItem("active_exam_id", examId);
-
-            // Navigate to the test execution page (we will build this next)
-            window.location.href = "take-exam.html";
+            // Navigate to take-exam.html and pass the examId via URL Query Parameters 
+            window.location.href = 'take-exam.html?examId=' + encodeURIComponent(examId);
         });
     });
 }
