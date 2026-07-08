@@ -12,13 +12,13 @@ const examHistoryContainer = document.getElementById("examHistory");
 const averageGradeDisplay = document.getElementById("averageGradeDisplay");
 const studentNameGreeting = document.getElementById("studentNameGreeting");
 
-// Fetch active user session to personalize the dashboard
+// Fetch active user session to display greeting
 const currentUser = accountManager.getActiveSession();
 if (currentUser) {
     studentNameGreeting.textContent = `(שלום ${currentUser.name})`;
 }
 
-// --- Logout Logic ---
+// Handle logout
 if (logoutBtn) {
     logoutBtn.addEventListener("click", () => {
         accountManager.logoutUser();
@@ -26,28 +26,41 @@ if (logoutBtn) {
     });
 }
 
-// --- Render Available Exams & Handle Search ---
+// Render exams and handle live search filtering
 function renderAvailableExams(searchQuery = "") {
     const allExams = examService.getAllExams();
 
-    // Filter exams based on the search query (matching title or exam code)
+    // Get the current student's grade history to find exams they already took
+    const storageKey = `grades_${currentUser?.id}`;
+    const studentGrades = JSON.parse(localStorage.getItem(storageKey)) || [];
+
+    // Extract just the exam IDs the student has already completed
+    const takenExamIds = studentGrades.map(grade => grade.examId);
+
+    // Filter by search query (title or exam code)
     const filteredExams = allExams.filter(exam => {
         const titleMatch = exam.title.toLowerCase().includes(searchQuery.toLowerCase());
         const codeMatch = exam.examCode ? exam.examCode.toLowerCase().includes(searchQuery.toLowerCase()) : false;
         return titleMatch || codeMatch;
     });
 
-    // Display message if no exams match the criteria
     if (filteredExams.length === 0) {
         availableExamsContainer.innerHTML = "<p class='text-muted'>לא נמצאו מבחנים תואמים.</p>";
         return;
     }
 
-    // Build the list of filtered exams
     let html = '<ul class="list-group">';
     filteredExams.forEach(exam => {
         const questionCount = exam.questions ? exam.questions.length : 0;
         const timeLimitText = exam.timeLimit > 0 ? `${exam.timeLimit} דק'` : "ללא הגבלת זמן";
+
+        // Check if this specific exam ID is in the student's taken exams array
+        const hasTaken = takenExamIds.includes(exam.id);
+
+        // If the exam was already taken, show a disabled button. Otherwise, show active start button.
+        const buttonHtml = hasTaken
+            ? `<button class="btn btn-secondary btn-sm" disabled>בוצע</button>`
+            : `<button class="btn btn-primary btn-sm start-exam-btn" data-id="${exam.id}">התחל מבחן</button>`;
 
         html += `
             <li class="list-group-item d-flex justify-content-between align-items-center">
@@ -55,42 +68,38 @@ function renderAvailableExams(searchQuery = "") {
                     <h6 class="mb-0">${exam.title} <span class="badge bg-secondary ms-1">${exam.examCode || ""}</span></h6>
                     <small class="text-muted">שאלות: ${questionCount} | ${timeLimitText}</small>
                 </div>
-                <button class="btn btn-primary btn-sm start-exam-btn" data-id="${exam.id}">
-                    התחל מבחן
-                </button>
+                ${buttonHtml}
             </li>
         `;
     });
     html += '</ul>';
 
     availableExamsContainer.innerHTML = html;
+
+    // Bind click events only after rendering the dynamic HTML
     attachStartExamListeners();
 }
 
-// Attach click events to the dynamic "Start Exam" buttons
+// Attach click events only to active start buttons
 function attachStartExamListeners() {
     const startButtons = document.querySelectorAll(".start-exam-btn");
     startButtons.forEach(btn => {
         btn.addEventListener("click", (event) => {
             const examId = event.target.getAttribute("data-id");
-
-            // Navigate to take-exam.html and pass the examId via URL Query Parameters 
             window.location.href = 'take-exam.html?examId=' + encodeURIComponent(examId);
         });
     });
 }
 
-// Listen for keystrokes in the search input to trigger live filtering
+// Live filtering event listener
 if (searchInput) {
     searchInput.addEventListener("input", (event) => {
         renderAvailableExams(event.target.value.trim());
     });
 }
 
-// --- Render Exam History & Calculate Average ---
+// Render past exams and update the average score display
 function renderHistory() {
-    // Retrieve the current user's specific grades from Local Storage
-    // (Defaults to an empty array if the user hasn't taken any exams yet)
     const storageKey = `grades_${currentUser?.id}`;
     const studentGrades = JSON.parse(localStorage.getItem(storageKey)) || [];
 
@@ -103,11 +112,8 @@ function renderHistory() {
     let totalScore = 0;
     let html = '<ul class="list-group">';
 
-    // Build the history list and sum the scores
     studentGrades.forEach(grade => {
         totalScore += grade.score;
-
-        // Use Bootstrap color classes based on pass/fail
         const badgeColor = grade.score >= 60 ? 'bg-success' : 'bg-danger';
 
         html += `
@@ -126,11 +132,10 @@ function renderHistory() {
     html += '</ul>';
     examHistoryContainer.innerHTML = html;
 
-    // Calculate and display the average grade (rounded to whole number)
     const average = Math.round(totalScore / studentGrades.length);
     averageGradeDisplay.textContent = average;
 }
 
-// Initial render calls when the page loads
+// Initialization calls
 renderAvailableExams();
 renderHistory();
