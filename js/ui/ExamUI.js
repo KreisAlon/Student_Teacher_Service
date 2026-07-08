@@ -1,3 +1,5 @@
+import { AccountManager } from '../services/AccountManager.js';
+
 export class ExamUI {
   constructor(examService) {
     // Get Service for CRUD operations on Exams
@@ -21,7 +23,13 @@ export class ExamUI {
   }
 
   renderExamList() {
-    const exams = this.examService.getAllExams();
+    // 1. Get the current user session
+    const accountManager = new AccountManager();
+    const currentUser = accountManager.getActiveSession();
+
+    // 2. Fetch ONLY the exams created by this specific teacher
+    // (Fallback to an empty array if somehow there is no logged-in user)
+    const exams = currentUser ? this.examService.getExamsByTeacher(currentUser.id) : [];
 
     this.examListElement.innerHTML = "";
 

@@ -8,6 +8,14 @@ const examService = new ExamService();
 const examUI = new ExamUI(examService);
 const accountManager = new AccountManager();
 
+// Fetch the currently logged-in teacher
+const currentUser = accountManager.getActiveSession();
+
+// Security check: Redirect to login if not a logged-in teacher
+if (!currentUser || currentUser.role !== "teacher") {
+    window.location.href = "login.html";
+}
+
 let currentExam = null;
 
 // DOM Elements - Added new fields
@@ -68,9 +76,9 @@ addQuestionBtn.addEventListener("click", () => {
         return;
     }
 
-    // Create exam if it doesn't exist, now with all details
+    // Create exam if it doesn't exist, now passing the teacher's ID (currentUser.id) as the creatorId
     if (!currentExam) {
-        currentExam = new Exam(title, description, category, examCode, timeLimit);
+        currentExam = new Exam(title, description, category, examCode, timeLimit, currentUser.id);
     }
 
     const correctAnswerIndex = correctAnswerNumber - 1;
@@ -154,6 +162,7 @@ function clearQuestionInputs() {
     correctAnswerInput.value = "";
 }
 
+// Initial render of the exam list
 examUI.renderExamList();
 
 // --- Logout & Return Home ---
@@ -168,3 +177,50 @@ if (logoutBtn) {
         window.location.href = "login.html";
     });
 }
+
+// --- NEW: Render Student Results for THIS Teacher's Exams ---
+function renderStudentResults() {
+    const tableBody = document.getElementById("studentResultsTableBody");
+    if (!tableBody) return;
+
+    // 1. Get all students from the system
+    const allUsers = accountManager.getAllUsers();
+    const students = allUsers.filter(user => user.role === "student");
+
+    // 2. Get only the exams created by the currently logged-in teacher
+    const myExams = examService.getExamsByTeacher(currentUser.id);
+    const myExamIds = myExams.map(exam => exam.id);
+
+    let html = "";
+
+    // 3. Loop through all students and find their grades for these specific exams
+    students.forEach(student => {
+        const studentGrades = JSON.parse(localStorage.getItem(`grades_${student.id}`)) || [];
+
+        // Filter grades to only include those belonging to this teacher's exams
+        const gradesInMyExams = studentGrades.filter(grade => myExamIds.includes(grade.examId));
+
+        gradesInMyExams.forEach(grade => {
+            const dateStr = new Date(grade.date).toLocaleDateString();
+            const badgeColor = grade.score >= 60 ? 'bg-success' : 'bg-danger';
+
+            html += `
+                <tr>
+                    <td>${student.name} (${student.id})</td>
+                    <td>${grade.examTitle}</td>
+                    <td><span class="badge ${badgeColor}">${grade.score}</span></td>
+                    <td>${dateStr}</td>
+                </tr>
+            `;
+        });
+    });
+
+    if (html === "") {
+        html = "<tr><td colspan='4' class='text-center text-muted'>No students have taken your exams yet.</td></tr>";
+    }
+
+    tableBody.innerHTML = html;
+}
+
+// Call the function when the page loads
+renderStudentResults();

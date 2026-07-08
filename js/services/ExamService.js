@@ -19,6 +19,12 @@ export class ExamService {
         return plainExams.map(examData => Exam.fromJSON(examData));
     }
 
+    // New function: Returns only the exams created by a specific teacher
+    getExamsByTeacher(teacherId) {
+        const allExams = this.getAllExams();
+        return allExams.filter(exam => exam.creatorId === teacherId);
+    }
+
     saveExam(exam) {
         const exams = this.getAllExams();
         const existingExamIndex = exams.findIndex(e => e.id === exam.id);

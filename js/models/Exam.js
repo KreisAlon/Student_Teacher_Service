@@ -1,9 +1,11 @@
 import { Question } from './Question.js';
 
 export class Exam {
-    constructor(title, description = "", category = "", examCode = "", timeLimit = 0, id = null, createdAt = null) {
+    // Added creatorId to the constructor
+    constructor(title, description = "", category = "", examCode = "", timeLimit = 0, creatorId = null, id = null, createdAt = null) {
         // Generate a unique ID using the current time and a random string if one is not provided
         this.id = id || Date.now().toString() + Math.random().toString(36).substring(2, 9);
+        this.creatorId = creatorId; // Store the ID of the teacher who created the exam
         this.title = title;
         this.description = description;
         this.category = category;
@@ -33,6 +35,7 @@ export class Exam {
             data.category,
             data.examCode,
             data.timeLimit,
+            data.creatorId, // Restore the creatorId
             data.id,
             data.createdAt
         );
