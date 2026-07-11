@@ -39,6 +39,7 @@ function renderExam(exam) {
 
     let html = "";
 
+
     // Loop through each Question object in the exam
     exam.questions.forEach((question, qIndex) => {
         html += `
@@ -66,6 +67,9 @@ function renderExam(exam) {
     });
 
     questionsContainer.innerHTML = html;
+
+    // Initialize the timer based on the current exam's time limit
+    startExamTimer(exam.timeLimit);
 }
 
 // --- Handle Exam Submission ---
@@ -119,4 +123,45 @@ function saveGrade(exam, score) {
     // Add to history and save back to local storage
     studentGrades.unshift(gradeRecord); // unshift adds to the beginning of the array
     localStorage.setItem(storageKey, JSON.stringify(studentGrades));
+}
+
+// --- Exam Timer & Auto-Submit Logic ---
+function startExamTimer(timeLimitInMinutes) {
+    // If the teacher set 0 or didn't set a time limit, do not start the timer
+    if (!timeLimitInMinutes || timeLimitInMinutes <= 0) return;
+
+    let timeRemaining = timeLimitInMinutes * 60; // Convert minutes to seconds
+
+    // Create a floating timer element at the top center of the screen
+    const timerElement = document.createElement("div");
+    timerElement.className = "alert alert-warning text-center fw-bold fs-4 position-fixed top-0 start-50 translate-middle-x mt-3 shadow z-3";
+    timerElement.style.minWidth = "200px";
+    document.body.appendChild(timerElement);
+
+    // Start the countdown interval every second (1000ms)
+    const countdown = setInterval(() => {
+        const minutes = Math.floor(timeRemaining / 60);
+        const seconds = timeRemaining % 60;
+
+        // Format the time text (add leading zero for seconds under 10)
+        timerElement.textContent = `Time Left: ${minutes}:${seconds < 10 ? '0' : ''}${seconds}`;
+
+        // When time runs out
+        if (timeRemaining <= 0) {
+            clearInterval(countdown); // Stop the timer
+            timerElement.classList.replace("alert-warning", "alert-danger"); // Change color to red
+            timerElement.textContent = "Time's up!";
+
+            alert("The time allotted for the exam has ended. Your exam will now be submitted automatically.");
+
+            // Find the exam form and trigger the auto-submit
+            const examForm = document.getElementById("examForm");
+            if (examForm) {
+                // Simulate a user clicking the submit button
+                examForm.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+            }
+        }
+
+        timeRemaining--; // Decrease time by 1 second
+    }, 1000);
 }
